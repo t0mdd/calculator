@@ -11,28 +11,40 @@ const stringToOperation = {
 const operate = (opString,a,b) => stringToOperation[opString](a,b);
 const inputArea = document.querySelector('.inputArea');
 const calculatorDisplay = document.querySelector('.calculatorDisplay');
+const validKeyboardInputs =
+  ['c','Backspace',...generateValidKeyboardInputs()];
 
 let currentOperation;
 let firstOperand;
 let secondOperand;
-let firstNumberEntered = false;
+let firstNumberFinalized = false;
+
+function generateValidKeyboardInputs(){
+  let result = [];
+  for(let i=0; i<=9; i++){
+    result.push('' + i);
+  }
+  for(key in stringToOperation){
+    result.push(key);
+  }
+  return result;
+}
 
 function clearResults(){
-  firstNumberEntered = false;
+  firstNumberFinalized = false;
   firstOperand = currentOperation = secondOperand = undefined;
   calculatorDisplay.textContent = '';
 }
-
-document.querySelector('#clear').addEventListener('click',clearResults);
 
 function createButton(className,id,textContent){
   let button = document.createElement('button');
   button.className = className;
   button.id = id;
   button.textContent = textContent;
-  button.addEventListener('click', e => updateState(e.target));
+  button.addEventListener('click', e => updateState(className,id));
   return button;
 }
+
 function createNumberButton(number){
   return createButton('number',number,number);
 }
@@ -76,71 +88,94 @@ function appendNumberToDisplay(numString){
   }
 }
 
-function updateState(buttonClicked){
-  let buttonClass = buttonClicked.className;
-  let buttonId = buttonClicked.id;
+function backspaceDisplay(){
+  calculatorDisplay.textContent =
+    calculatorDisplay.textContent.slice(0,-1);
+  return calculatorDisplay.textContent;
+}
 
+function updateState(actionType,actionValue){
   if(firstOperand === undefined && currentOperation === undefined &&
     secondOperand === undefined){
-    if(buttonClass === 'number'){
-      calculatorDisplay.textContent = buttonId;
-      firstOperand = +buttonId;
+    if(actionType === 'number'){
+      calculatorDisplay.textContent = actionValue;
+      firstOperand = +actionValue;
     }
-    else if(buttonClass === 'operation'){
+    else if(actionType === 'operation'){
       clearDisplay();
-      currentOperation = buttonId;
+      currentOperation = actionValue;
     }
-    else if(buttonClass === 'evaluation'){
+    else if(actionType === 'evaluation'){
       clearDisplay();
     }
   }
 
   else if(firstOperand !== undefined &&
     currentOperation === undefined && secondOperand === undefined){
-    if(buttonClass === 'number'){
-      if(firstNumberEntered){
-        calculatorDisplay.textContent = buttonId;
-        firstOperand = +buttonId;
-        firstNumberEntered = false;
+    if(actionType === 'number'){
+      if(firstNumberFinalized){
+        // reset the calculation in this case
+        calculatorDisplay.textContent = actionValue;
+        firstOperand = +actionValue;
+        firstNumberFinalized = false;
       }
       else{
-        appendNumberToDisplay(buttonId);
+        // otherwise continue entering the first number
+        appendNumberToDisplay(actionValue);
         firstOperand = +calculatorDisplay.textContent;
       }
     }
-    else if(buttonClass === 'operation'){
-      currentOperation = buttonId;
-      firstNumberEntered = true;
+    else if(actionType === 'operation'){
+      currentOperation = actionValue;
+      firstNumberFinalized = true;
     }
-    else if(buttonClass === 'evaluation'){
-      firstNumberEntered = true;
+    else if(actionType === 'evaluation'){
+      firstNumberFinalized = true;
+    }
+    else if(actionType === 'backspace'){
+      let newDisplay = backspaceDisplay();
+      if(newDisplay){
+        firstOperand = +calculatorDisplay.textContent;
+      }
+      else{
+        clearResults();
+      }
     }
   }
 
   else if(firstOperand !== undefined &&
     currentOperation !== undefined && secondOperand === undefined){
-    if(buttonClass === 'number'){
+    if(actionType === 'number'){
       clearDisplay();
-      appendNumberToDisplay(buttonId);
-      secondOperand = +buttonId;
+      appendNumberToDisplay(actionValue);
+      secondOperand = +actionValue;
     }
-    else if(buttonClass === 'operation'){
-      currentOperation = buttonId;
+    else if(actionType === 'operation'){
+      currentOperation = actionValue;
     }
-    else if(buttonClass === 'evaluation'){
+    else if(actionType === 'evaluation'){
       // acts as a way to cancel the operation
       currentOperation = undefined;
+    }
+    else if(actionType === 'backspace'){
+      let newDisplay = backspaceDisplay();
+      if(newDisplay){
+        firstOperand = +calculatorDisplay.textContent;
+      }
+      else{
+        clearResults();
+      }
     }
   }
 
   else if(firstOperand !== undefined &&
     currentOperation !== undefined && secondOperand !== undefined){
-    if(buttonClass === 'number'){
-      appendNumberToDisplay(buttonId);
+    if(actionType === 'number'){
+      appendNumberToDisplay(actionValue);
       secondOperand = +calculatorDisplay.textContent;
     }
-    else if(buttonClass === 'operation' ||
-      buttonClass === 'evaluation'){
+    else if(actionType === 'operation' ||
+      actionType === 'evaluation'){
       if(currentOperation === '/' && secondOperand === 0){
         clearResults();
         calculatorDisplay.textContent =
@@ -151,22 +186,31 @@ function updateState(buttonClicked){
           operate(currentOperation,firstOperand,secondOperand);
         calculatorDisplay.textContent = firstOperand;
         secondOperand = undefined;
-        currentOperation = (buttonClass === 'operation') ?
-          buttonId : undefined;
+        currentOperation = (actionType === 'operation') ?
+          actionValue : undefined;
+      }
+    }
+    else if(actionType === 'backspace'){
+      let newDisplay = backspaceDisplay();
+      if(newDisplay){
+        secondOperand = +calculatorDisplay.textContent;
+      }
+      else{
+        clearResults();
       }
     }
   }
 
   else if(firstOperand === undefined &&
     currentOperation !== undefined && secondOperand === undefined){
-    if(buttonClass === 'number'){
-      calculatorDisplay.textContent = buttonId;
-      secondOperand = +buttonId;
+    if(actionType === 'number'){
+      calculatorDisplay.textContent = actionValue;
+      secondOperand = +actionValue;
     }
-    else if(buttonClass === 'operation'){
-      currentOperation = buttonId;
+    else if(actionType === 'operation'){
+      currentOperation = actionValue;
     }
-    else if(buttonClass === 'evaluation'){
+    else if(actionType === 'evaluation'){
       currentOperation.textContent = 'The operation needs a number';
       clearResults();
     }
@@ -175,12 +219,12 @@ function updateState(buttonClicked){
   // unary operations
   else if(firstOperand === undefined &&
     currentOperation !== undefined && secondOperand !== undefined){
-    if(buttonClass === 'number'){
-      appendNumberToDisplay(buttonId);
+    if(actionType === 'number'){
+      appendNumberToDisplay(actionValue);
       secondOperand = +calculatorDisplay.textContent;
     }
-    else if(buttonClass === 'operation' ||
-      buttonClass === 'evaluation'){
+    else if(actionType === 'operation' ||
+      actionType === 'evaluation'){
       if(['/','*'].includes(currentOperation)){
         calculatorDisplay.textContent = 'Division and ' +
           'multiplication need to take a number before being clicked';
@@ -191,16 +235,41 @@ function updateState(buttonClicked){
           operate(currentOperation,0,secondOperand);
         calculatorDisplay.textContent = firstOperand;
         secondOperand = undefined;
-        if(buttonClass === 'operation'){
-          currentOperation = buttonId;
+        if(actionType === 'operation'){
+          currentOperation = actionValue;
         }
-        else if(buttonClass === 'evaluation'){
+        else if(actionType === 'evaluation'){
           currentOperation = undefined;
         }
+      }
+    }
+    else if(actionType === 'backspace'){
+      let newDisplay = backspaceDisplay();
+      if(newDisplay){
+        secondOperand = +calculatorDisplay.textContent;
+      }
+      else{
+        clearResults();
       }
     }
   }
 
 }
 
+document.querySelector('.clear').addEventListener('click',clearResults);
+document.querySelector('.backspace')
+  .addEventListener('click',e => updateState('backspace',null));
+window.addEventListener('keydown', e => {
+  let keyPressed = e.key;
+  if(keyPressed.toLowerCase === 'c'){
+    clearResults();
+  }
+  else if(keyPressed === 'Backspace'){
+    updateState('backspace',null);
+  }
+  else if(validKeyboardInputs.includes(keyPressed)){
+    let correspondingButton = document.getElementById(keyPressed);
+    updateState(correspondingButton.className,correspondingButton.id);
+  }
+});
 setupInputArea();
