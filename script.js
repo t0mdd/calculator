@@ -9,6 +9,7 @@ const stringToOperation = {
   ['/']:divide
 };
 const operate = (opString,a,b) => stringToOperation[opString](a,b);
+const correctionOptions = document.querySelector('.correctionOptions');
 const inputArea = document.querySelector('.inputArea');
 const calculatorDisplay = document.querySelector('.calculatorDisplay');
 const validKeyboardInputs =
@@ -36,38 +37,57 @@ function clearResults(){
   calculatorDisplay.textContent = '';
 }
 
-function createButton(className,id,textContent){
+function createButton(className,id,textContent,colour){
   let button = document.createElement('button');
   button.className = className;
   button.id = id;
   button.textContent = textContent;
   button.addEventListener('click', e => updateState(className,id));
+  button.style.flex = 1;
+  button.style.backgroundColor = colour;
   return button;
 }
 
 function createNumberButton(number){
-  return createButton('number',number,number);
+  return createButton('number',number,number,'hsl(120,50%,80%)');
 }
 
 function createOperationButton(operation){
-  return createButton('operation',operation,operation);
+  return createButton('operation',operation,operation,
+    'hsl(60,50%,80%)');
 }
 
 function createEqualsButton(){
-  return createButton('evaluation','=','=')
+  return createButton('evaluation','=','=','hsl(300,50%,80%)')
 }
 
 function setupInputArea(){
 
+  const clearButton = createButton('clear','clear','Clear',
+    'hsl(250,50%,80%)');
+  clearButton.addEventListener('click',clearResults);
+  clearButton.style.flex = 1;
+
+  const backspaceButton = createButton('backspace','backspace',
+    'Backspace', 'hsl(210,50%,80%)');
+  correctionOptions.append(clearButton,backspaceButton);
+  backspaceButton
+    .addEventListener('click',e => updateState('backspace',null));
+  backspaceButton.style.flex = 1;
+
   function createUpperRow(num1,num2,num3,op){
     const row = document.createElement('div');
+    row.className = 'inputRow'
     row.append(createNumberButton(num1), createNumberButton(num2),
                createNumberButton(num3), createOperationButton(op));
     return row;
   }
 
   let bottomRow = document.createElement('div');
-  bottomRow.append(createNumberButton(0),createEqualsButton(),
+  bottomRow.className = 'inputRow';
+  let zeroButton = createNumberButton(0);
+  zeroButton.style.flex = 2;
+  bottomRow.append(zeroButton,createEqualsButton(),
                    createOperationButton('+'));
   inputArea.append(createUpperRow(7,8,9,'/'),createUpperRow(4,5,6,'*'),
                    createUpperRow(1,2,3,'-'),bottomRow);
@@ -256,9 +276,6 @@ function updateState(actionType,actionValue){
 
 }
 
-document.querySelector('.clear').addEventListener('click',clearResults);
-document.querySelector('.backspace')
-  .addEventListener('click',e => updateState('backspace',null));
 window.addEventListener('keydown', e => {
   let keyPressed = e.key;
   if(keyPressed.toLowerCase === 'c'){

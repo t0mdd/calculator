@@ -1,0 +1,55 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-size: 3vh;
+  font-family: 'Courier New';
+  color: hsl(200,30%,45%);
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.calculatorBody {
+  width: 75vw;
+  max-width: 650px;
+  height: 75vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.calculatorBody  {
+  border: 3px solid hsl(180,70%,45%);
+  margin: 0;
+}
+
+.calculatorDisplay{
+  flex: 1;
+  margin: 0;
+  background-color: hsl(180,70%,90%);
+  padding: 10px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.correctionOptions{
+  flex: 1;
+  display: flex;
+}
+
+.inputArea{
+  flex: 4;
+  display: flex;
+  flex-direction: column;
+}
+
+.inputRow{
+  flex: 1;
+  display: flex;
+}
