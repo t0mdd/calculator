@@ -111,7 +111,9 @@ function appendNumberToDisplay(numString){
 function backspaceDisplay(){
   calculatorDisplay.textContent =
     calculatorDisplay.textContent.slice(0,-1);
-  return calculatorDisplay.textContent;
+  return calculatorDisplay.textContent.slice(-1) === '.' ?
+    calculatorDisplay.textContent.slice(0,-1) :
+    calculatorDisplay.textContent;
 }
 
 function updateState(actionType,actionValue){
